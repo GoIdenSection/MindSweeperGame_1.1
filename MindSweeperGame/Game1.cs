@@ -45,21 +45,24 @@ namespace MindSweeperGame
             base.Initialize();
         }
 
+        //laddar spelets resurser tex mina bilder och min font
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             font = Content.Load<SpriteFont>("bFont");
 
+            //skapar en enfärgad textur som används som topprad
             topBarTexture = new Texture2D(GraphicsDevice, 1, 1);
             topBarTexture.SetData(new[] { Color.Black });
 
-
+            //textur för spelbrikor
             textureClosed = Content.Load<Texture2D>("stängd");
             textureOpen = Content.Load<Texture2D>("open");
             textureMine = Content.Load<Texture2D>("minorna");
             textureFlag = Content.Load<Texture2D>("minaFunnen");
 
+            //laddar in texturer för siffror 0-8
             numberTextures = new Texture2D[9];
             for (int i = 0; i <= 8; i++)
             {
@@ -67,10 +70,12 @@ namespace MindSweeperGame
             }
         }
 
+        //uppdaterat spelets logik varige frame
         protected override void Update(GameTime gameTime)
         {
             if (isChoosingDifficulty)
             {
+                //startar nytt spel boreonde på vald svårightsgrad
                 if (Keyboard.GetState().IsKeyDown(Keys.D1))
                     StartNewGame(10, 10, 10);
                 else if (Keyboard.GetState().IsKeyDown(Keys.D2))
@@ -82,6 +87,7 @@ namespace MindSweeperGame
             {
                 MouseState mouse = Mouse.GetState();
 
+                //vensker klik hantering
                 if (mouse.LeftButton == ButtonState.Pressed && previousMouse.LeftButton == ButtonState.Released)
                 {
                     bool moveWasMade = grid.HandleLeftClick(
@@ -100,7 +106,7 @@ namespace MindSweeperGame
                     }
                 }
 
-                // Hantera högerklick
+                // högerklock handering
                 if (mouse.RightButton == ButtonState.Pressed && previousMouse.RightButton == ButtonState.Released)
                 {
                     grid.HandleRightClick(mouse.X - grid.OffsetX, mouse.Y - grid.OffsetY);
@@ -112,6 +118,7 @@ namespace MindSweeperGame
                 previousMouse = mouse;
             }
 
+            // om spelaren trycker på Q så startar ett nytt spel
             if (Keyboard.GetState().IsKeyDown(Keys.Q))
             {
                 isChoosingDifficulty = true;
@@ -119,6 +126,7 @@ namespace MindSweeperGame
                 isGameStarted = false;
             }
 
+            //uppdaterar tiden
             if (!isChoosingDifficulty && !isGameOver && isGameStarted)
             {
                 elapsedTime += gameTime.ElapsedGameTime.TotalSeconds;
@@ -133,13 +141,14 @@ namespace MindSweeperGame
             base.Update(gameTime);
         }
 
+        //ritar allt grafiskt på skärmen
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             spriteBatch.Begin();
 
-            // Rita toppraden (alltid, oavsett skärm)
+            // Ritatar toppraden med tid och antal drag
             spriteBatch.Draw(topBarTexture, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, topBarHeight), Color.Black);
             string scoreboard = $"Time: {totalSeconds}   Moves: {moveCount}";
 
@@ -154,7 +163,7 @@ namespace MindSweeperGame
 
             if (isChoosingDifficulty)
             {
-                // Centrera texten horisontellt
+                // visar menyn för att välja svårighetsgrad
                 string prompt = "Choose difficulty level:";
                 Vector2 promptSize = font.MeasureString(prompt);
                 float centeredX = (graphics.PreferredBackBufferWidth - promptSize.X) / 2;
@@ -169,6 +178,7 @@ namespace MindSweeperGame
                 // Rita själva banan
                 grid.Draw(spriteBatch, textureClosed, textureOpen, textureFlag, textureMine, numberTextures);
 
+                //visar medelande om spelvinsr eller förlust
                 if (isGameOver)
                 {
                     string message = grid.CheckWin() ? "You won! Press Q to restart" : "Game Over! Press Q to restart";
@@ -183,7 +193,7 @@ namespace MindSweeperGame
             base.Draw(gameTime);
         }
 
-
+        //startar nytt spel med angivna parameterar
         private void StartNewGame(int width, int height, int mines)
         {
             moveCount = 0;
@@ -195,6 +205,7 @@ namespace MindSweeperGame
             isChoosingDifficulty = false;
             isGameOver = false;
 
+            //Beräknar var på skärmen spelplanen ska ritas
             grid.CalculateOffset(graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, topBarHeight);
         }
     }

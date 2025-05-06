@@ -16,8 +16,8 @@ namespace MindSweeperGame
         public bool GameOver { get; set; }
         public int OffsetX { get; private set; }
         public int OffsetY { get; private set; }
+        private readonly Random random = new Random();// Slumptal för minplacering
 
-        private readonly Random random = new Random();
 
         public Grid(int width, int height, int cellSize, int mines)
         {
@@ -28,23 +28,25 @@ namespace MindSweeperGame
             Cells = new Cell[Width, Height];
             InitializeCells(); // Skapar tomma celler utan minor
         }
+        //beräknar offset för att centrera rutnätet på skärmen
         public void CalculateOffset(int screenWidth, int screenHeight, int topBarHeight)
         {
             int gridWidthPx = Width * CellSize;
             int gridHeightPx = Height * CellSize;
 
-            // Beräkna offset för centrering
             OffsetX = Math.Max(0, (screenWidth - gridWidthPx) / 2);
             OffsetY = Math.Max(topBarHeight, (screenHeight - gridHeightPx) / 2) + topBarHeight / 2;
         }
 
+        //skappar  tomma celler
         private void InitializeCells()
         {
             for (int x = 0; x < Width; x++)
                 for (int y = 0; y < Height; y++)
                     Cells[x, y] = new Cell(x, y, CellSize);
         }
-
+        //genererar minon efter första kliket och undviker 3x3 område runt klicket
+        //skapar minor i rutnätet
         public void GenerateMinesAfterFirstClick(int avoidX, int avoidY)
         {
             int placed = 0;
@@ -53,7 +55,6 @@ namespace MindSweeperGame
                 int x = random.Next(Width);
                 int y = random.Next(Height);
 
-                // Undvik 3x3 området runt första klicket
                 if (Math.Abs(x - avoidX) <= 1 && Math.Abs(y - avoidY) <= 1)
                     continue;
 
@@ -66,6 +67,7 @@ namespace MindSweeperGame
             CalculateAdjacentMines();
         }
 
+        //beräknar antal närliggande minor för varje cell
         private void CalculateAdjacentMines()
         {
             for (int x = 0; x < Width; x++)
@@ -90,7 +92,7 @@ namespace MindSweeperGame
                 }
             }
         }
-
+        //hanterar vänsterklik (avslöjar cell)
         public bool HandleLeftClick(int mouseX, int mouseY, int currentMoveCount)
         {
             int x = mouseX / CellSize;
@@ -115,12 +117,12 @@ namespace MindSweeperGame
             {
                 cell.IsRevealed = true;
                 GameOver = true;
-                RevealAllMines();
+                RevealAllMines(); //visar alla minorna
                 return true;
             }
 
             if (cell.AdjacentMines == 0)
-                FloodFill(x, y);
+                FloodFill(x, y);//avslöjar celler utan närliggande minor
             else
                 cell.IsRevealed = true;
 
@@ -129,6 +131,7 @@ namespace MindSweeperGame
 
             return true;
         }
+        //hanterar högerklick (flaggar/avflaggar cell)
         public void HandleRightClick(int mouseX, int mouseY)
         {
             int x = mouseX / CellSize;
@@ -142,7 +145,7 @@ namespace MindSweeperGame
             if (!cell.IsRevealed)
                 cell.IsFlagged = !cell.IsFlagged;
         }
-
+        //avslöjar alla minor ANVänds vis spelet förloras
         private void RevealAllMines()
         {
             for (int x = 0; x < Width; x++)
@@ -156,7 +159,7 @@ namespace MindSweeperGame
                 }
             }
         }
-
+        //funktion som ritar hela rutnätet
         public void Draw(SpriteBatch spriteBatch, Texture2D closed, Texture2D open, Texture2D flag, Texture2D mine, Texture2D[] numbers)
         {
             for (int x = 0; x < Width; x++)
@@ -173,7 +176,7 @@ namespace MindSweeperGame
                 }
             }
         }
-
+        //flood fill algoritm som avslöjar celler utan närliggande minor
         private void FloodFill(int startX, int startY)
         {
             Queue<Point> queue = new Queue<Point>();
@@ -185,19 +188,19 @@ namespace MindSweeperGame
                 int x = p.X;
                 int y = p.Y;
 
-                // Kolla gränser
+                // kolla gränser
                 if (x < 0 || x >= Width || y < 0 || y >= Height)
                     continue;
 
                 Cell cell = Cells[x, y];
 
-                // Avbryt om cellen redan är avslöjad, är mina eller flaggad
+                // svbryt om cellen redan är avslöjad, är mina eller flaggad
                 if (cell.IsRevealed || cell.HasMine || cell.IsFlagged)
                     continue;
 
                 cell.IsRevealed = true;
 
-                // Fortsätt bara floodfilla om det inte finns närliggande minor
+                // fortsätt bara floodfilla om det inte finns närliggande minor
                 if (cell.AdjacentMines == 0)
                 {
                     for (int dx = -1; dx <= 1; dx++)
@@ -211,6 +214,7 @@ namespace MindSweeperGame
                 }
             }
         }
+        //kontrolerar om sperlaren har vunnit
         public bool CheckWin()
         {
             for (int x = 0; x < Width; x++)
@@ -219,9 +223,6 @@ namespace MindSweeperGame
                 {
                     var cell = Cells[x, y];
 
-                    // En cell ska räknas som "klar" om:
-                    // 1. Det är en mina OCH är flaggad, ELLER
-                    // 2. Det inte är en mina OCH är avslöjad
                     if (!cell.HasMine && !cell.IsRevealed)
                         return false;
                 }

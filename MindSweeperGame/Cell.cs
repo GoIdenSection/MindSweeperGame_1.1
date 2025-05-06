@@ -13,6 +13,7 @@ namespace MindSweeperGame
 
         public Cell(int gridX, int gridY, int size)
         {
+            // Beräknar cellens position och storlek i spelet
             Bounds = new Rectangle(gridX * size, gridY * size, size, size);
             HasMine = false;
             IsRevealed = false;
@@ -20,6 +21,7 @@ namespace MindSweeperGame
             AdjacentMines = 0;
         }
 
+        // Ritar cellen baserat på dess nuvarande tillstån
         public void Draw(SpriteBatch spriteBatch, Texture2D closed, Texture2D open, Texture2D flag, Texture2D mine, Texture2D[] numbers, Rectangle drawRect)
         {
             if (IsRevealed)
